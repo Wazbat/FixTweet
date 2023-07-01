@@ -1,14 +1,9 @@
 import { renderCard } from '../helpers/card';
 import { Constants } from '../constants';
 import { fetchConversation } from '../fetch';
-import { linkFixer } from '../helpers/linkFixer';
 import { handleMosaic } from '../helpers/mosaic';
-import { colorFromPalette } from '../helpers/palette';
-import { translateTweet } from '../helpers/translate';
-import { unescapeText } from '../helpers/utils';
 import { processMedia } from '../helpers/media';
-import { convertToApiUser } from './user';
-import { isGraphQLTweet, isGraphQLTweetNotFoundResponse } from '../utils/graphql';
+import { isGraphQLTweetNotFoundResponse } from '../utils/graphql';
 
 /* This function does the heavy lifting of processing data from Twitter API
    and using it to create FixTweet's streamlined API responses */
@@ -90,7 +85,6 @@ const populateTweetProperties = async (
   // console.log('tweet', JSON.stringify(tweet));
 
   /* Populate this Tweet's media */
-  console.log('mediaList', mediaList);
   mediaList.forEach(media => {
     const mediaObject = processMedia(media);
     if (mediaObject) {
@@ -215,7 +209,7 @@ export const statusAPI = async (
   // eslint-disable-next-line prefer-const
   let wasMediaBlockedNSFW = false;
   // eslint-disable-next-line prefer-const
-  let conversation = await fetchConversation(status, event);
+  const conversation = await fetchConversation(status, event);
   // let tweet: GraphQLTweet | TweetTombstone;
   const tweet: SyndicationTweet = conversation;
   if (isGraphQLTweetNotFoundResponse(conversation)) { 

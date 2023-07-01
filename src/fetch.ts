@@ -1,6 +1,5 @@
 import { Constants } from './constants';
 import { generateUserAgent } from './helpers/useragent';
-import { isGraphQLTweetNotFoundResponse } from './utils/graphql';
 
 const API_ATTEMPTS = 16;
 
