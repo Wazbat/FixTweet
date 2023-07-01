@@ -457,3 +457,158 @@ type GraphQLTweetFoundResponse = {
   }
 }
 type GraphQLTweetDetailResponse = GraphQLTweetFoundResponse | GraphQLTweetNotFoundResponse;
+
+
+type SyndicationTweet = {
+  __typename: "Tweet",
+  in_reply_to_screen_name: string; // "TitterDaily",
+  in_reply_to_user_id_str: string; // "752567226",
+  in_reply_to_status_id_str: string; // "1674765247255654400",
+  lang: string; // "en"
+  favorite_count: number; // 15343,
+  created_at: string; // "2023-06-30T19:41:22.000Z",
+  display_text_range: [
+    number, number
+  ],
+  entities: TweetEntities;
+  id_str: string; // "1674865731136020505",
+  text: string; // "@TitterDaily Temporary emergency measure. We were getting data pillaged so much that it was degrading service for normal users!",
+  user: {
+    id_str: string; // "44196397",
+    name: string; // "Elon Musk",
+    profile_image_url_https: string; // "https://pbs.twimg.com/profile_images/1590968738358079488/IY9Gx6Ok_normal.jpg",
+    screen_name: string; // "elonmusk",
+    verified: false,
+    highlighted_label: {
+      description: "Twitter",
+      badge: {
+        url: "https://pbs.twimg.com/profile_images/1488548719062654976/u6qfBBkF_bigger.jpg"
+      },
+      url: {
+        url: "https://twitter.com/Twitter",
+        url_type: "DeepLink"
+      },
+      user_label_type: "BusinessLabel",
+      user_label_display_type: "Badge"
+    },
+    is_blue_verified: true
+  },
+  edit_control: {
+    edit_tweet_ids: [
+      string // "1674865731136020505"
+    ],
+    editable_until_msecs: string; // "1688157682000",
+    is_edit_eligible: boolean; // false,
+    edits_remaining: string; // "5"
+  },
+  mediaDetails?: TweetMedia[]
+  conversation_count: number; // 993,
+  news_action_type: string; // "conversation",
+  card?: TweetCard;
+  "parent": {
+    "lang": "en",
+    "reply_count": 242,
+    "retweet_count": 1151,
+    "favorite_count": 5294,
+    "possibly_sensitive": false,
+    "created_at": "2023-06-30T13:02:05.000Z",
+    "display_text_range": [
+      0,
+      259
+    ],
+    "entities": {
+      "hashtags": [
+        
+      ],
+      "urls": [
+        
+      ],
+      "user_mentions": [
+        
+      ],
+      "symbols": [
+        
+      ],
+      "media": [
+        {
+          "display_url": "pic.twitter.com/DbfuAWwS4p",
+          "expanded_url": "https://twitter.com/TitterDaily/status/1674765247255654400/photo/1",
+          "indices": [
+            260,
+            283
+          ],
+          "url": "https://t.co/DbfuAWwS4p"
+        }
+      ]
+    },
+    "id_str": "1674765247255654400",
+    "text": "NEWS: Twitter's web version no longer allows users to browse without logging in. All urls redirect to the signup page. \n\nThis is believed to be a measure to make it harder for scrapers to take Twitter's data, like ChatGPT's web browsing plugin has been doing. https://t.co/DbfuAWwS4p",
+    "user": {
+      "id_str": "752567226",
+      "name": "T(w)itter Daily News ",
+      "profile_image_url_https": "https://pbs.twimg.com/profile_images/1515124606583152648/4bZaW28-_normal.jpg",
+      "screen_name": "TitterDaily",
+      "verified": false,
+      "is_blue_verified": true,
+      "profile_image_shape": "Circle"
+    },
+    "edit_control": {
+      "edit_tweet_ids": [
+        "1674765247255654400"
+      ],
+      "editable_until_msecs": "1688133725000",
+      "is_edit_eligible": false,
+      "edits_remaining": "5"
+    },
+    "mediaDetails": TweetMedia[],
+    "photos": [
+      {
+        "backgroundColor": {
+          "red": 204,
+          "green": 214,
+          "blue": 221
+        },
+        "cropCandidates": [
+          {
+            "x": 0,
+            "y": 0,
+            "w": 1069,
+            "h": 599
+          },
+          {
+            "x": 110,
+            "y": 0,
+            "w": 901,
+            "h": 901
+          },
+          {
+            "x": 165,
+            "y": 0,
+            "w": 790,
+            "h": 901
+          },
+          {
+            "x": 335,
+            "y": 0,
+            "w": 451,
+            "h": 901
+          },
+          {
+            "x": 0,
+            "y": 0,
+            "w": 1069,
+            "h": 901
+          }
+        ],
+        "expandedUrl": "https://twitter.com/TitterDaily/status/1674765247255654400/photo/1",
+        "url": "https://pbs.twimg.com/media/Fz30u9eWcAMVqNe.jpg",
+        "width": 1069,
+        "height": 901
+      }
+    ],
+    "isEdited": false,
+    "isStaleEdit": false
+  },
+  isEdited: false,
+  isStaleEdit: false
+}

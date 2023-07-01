@@ -13,7 +13,7 @@ import { isGraphQLTweet, isGraphQLTweetNotFoundResponse } from '../utils/graphql
 /* This function does the heavy lifting of processing data from Twitter API
    and using it to create FixTweet's streamlined API responses */
 const populateTweetProperties = async (
-  tweet: GraphQLTweet,
+  tweet: SyndicationTweet,
   conversation: any, // TimelineBlobPartial,
   language: string | undefined
   // eslint-disable-next-line sonarjs/cognitive-complexity
@@ -23,13 +23,22 @@ const populateTweetProperties = async (
   /* With v2 conversation API we re-add the user object ot the tweet because
      Twitter stores it separately in the conversation API. This is to consolidate
      it in case a user appears multiple times in a thread. */
-  const graphQLUser = tweet.core.user_results.result;
+  /* Temp disabled while we use consoldiation
+  const graphQLUser = tweet.core?.user_results.result;
   const apiUser = convertToApiUser(graphQLUser);
+  */
+  const apiUser = {
+    id: tweet.user.id_str,
+    name: tweet.user.name,
+    screen_name: tweet.user.screen_name,
+    avatar_url: tweet.user.profile_image_url_https,
+    banner_url: undefined
+  }
 
   /* Populating a lot of the basics */
-  apiTweet.url = `${Constants.TWITTER_ROOT}/${apiUser.screen_name}/status/${tweet.rest_id}`;
-  apiTweet.id = tweet.rest_id;
-  apiTweet.text = unescapeText(linkFixer(tweet, tweet.legacy.full_text || ''));
+  apiTweet.url = `${Constants.TWITTER_ROOT}/${apiUser.screen_name}/status/${tweet.id_str}`;
+  apiTweet.id = tweet.id_str;
+  apiTweet.text = tweet.text // unescapeText(linkFixer(tweet, tweet.text || ''));
   apiTweet.author = {
     id: apiUser.id,
     name: apiUser.name,
@@ -41,14 +50,20 @@ const populateTweetProperties = async (
     ),*/,
     banner_url: apiUser.banner_url || ''
   };
-  apiTweet.replies = tweet.legacy.reply_count;
+  /*
+  apiTweet.replies = tweet.reply_count;
   apiTweet.retweets = tweet.legacy.retweet_count;
   apiTweet.likes = tweet.legacy.favorite_count;
   apiTweet.color = apiTweet.author.avatar_color;
   apiTweet.twitter_card = 'tweet';
   apiTweet.created_at = tweet.legacy.created_at;
   apiTweet.created_timestamp = new Date(tweet.legacy.created_at).getTime() / 1000;
-
+  */
+  // Syndication API is different
+  apiTweet.replies = tweet.conversation_count;
+  apiTweet.likes = tweet.favorite_count;
+  apiTweet.twitter_card = 'tweet';
+  /*
   apiTweet.possibly_sensitive = tweet.legacy.possibly_sensitive;
 
   if (tweet.views.state === 'EnabledWithCount') {
@@ -56,23 +71,26 @@ const populateTweetProperties = async (
   } else {
     apiTweet.views = null;
   }
-
-  if (tweet.legacy.lang !== 'unk') {
-    apiTweet.lang = tweet.legacy.lang;
+  */
+  apiTweet.views = null;
+  if (tweet.lang !== 'unk') {
+    apiTweet.lang = tweet.lang;
   } else {
     apiTweet.lang = null;
   }
+  
 
-  apiTweet.replying_to = tweet.legacy?.in_reply_to_screen_name || null;
-  apiTweet.replying_to_status = tweet.legacy?.in_reply_to_status_id_str || null;
+  apiTweet.replying_to = tweet.in_reply_to_screen_name || null;
+  apiTweet.replying_to_status = tweet.in_reply_to_status_id_str || null;
   
   const mediaList = Array.from(
-    tweet.legacy.extended_entities?.media || tweet.legacy.entities?.media || []
+    tweet.mediaDetails || []
   );
 
   // console.log('tweet', JSON.stringify(tweet));
 
   /* Populate this Tweet's media */
+  console.log('mediaList', mediaList);
   mediaList.forEach(media => {
     const mediaObject = processMedia(media);
     if (mediaObject) {
@@ -101,19 +119,21 @@ const populateTweetProperties = async (
 
   /* Handle photos and mosaic if available */
   if ((apiTweet.media?.photos?.length || 0) > 1) {
-    const mosaic = await handleMosaic(apiTweet.media?.photos || [], tweet.rest_id);
+    const mosaic = await handleMosaic(apiTweet.media?.photos || [], tweet.id_str);
     if (typeof apiTweet.media !== 'undefined' && mosaic !== null) {
       apiTweet.media.mosaic = mosaic;
     }
   }
 
   // Add Tweet source but remove the link HTML tag
+  /*
   if (tweet.source) {
     apiTweet.source = (tweet.source || '').replace(
       /<a href="(.+?)" rel="nofollow">(.+?)<\/a>/,
       '$2'
     );
   }
+  */
 
   /* Populate a Twitter card */
   
@@ -130,6 +150,9 @@ const populateTweetProperties = async (
   }
 
   /* If a language is specified in API or by user, let's try translating it! */
+  
+  /*
+  Temp disabling this for now while we have no conversation
   if (typeof language === 'string' && language.length === 2 && language !== tweet.legacy.lang) {
     const translateAPI = await translateTweet(
       tweet,
@@ -145,9 +168,10 @@ const populateTweetProperties = async (
       };
     }
   }
-
+  */
   return apiTweet;
 };
+
 
 const writeDataPoint = (
   event: FetchEvent,
@@ -188,15 +212,22 @@ export const statusAPI = async (
   event: FetchEvent,
   flags?: InputFlags
 ): Promise<TweetAPIResponse> => {
+  // eslint-disable-next-line prefer-const
   let wasMediaBlockedNSFW = false;
+  // eslint-disable-next-line prefer-const
   let conversation = await fetchConversation(status, event);
-  let tweet: GraphQLTweet | TweetTombstone;
+  // let tweet: GraphQLTweet | TweetTombstone;
+  const tweet: SyndicationTweet = conversation;
   if (isGraphQLTweetNotFoundResponse(conversation)) { 
       writeDataPoint(event, language, wasMediaBlockedNSFW, 'NOT_FOUND', flags);
       return { code: 404, message: 'NOT_FOUND' };
   }
   /* Fallback for if Tweet did not load (i.e. NSFW) */
   if (Object.keys(conversation).length === 0) {
+    // For now, we log it as an API failure as this new endpoint does not support auth
+    writeDataPoint(event, language, wasMediaBlockedNSFW, 'API_FAIL', flags);
+    return { code: 500, message: 'API_FAIL' };
+    /*
     // Try again using elongator API proxy
     console.log('No Tweet was found, loading again from elongator');
     conversation = await fetchConversation(status, event, true);
@@ -206,9 +237,12 @@ export const statusAPI = async (
     }
     // If the tweet now loads, it was probably NSFW
     wasMediaBlockedNSFW = true;
+    */
   }
   // Find this specific tweet in the conversation
+  /*
   try {
+    Temp commented out while we use the syndication API
     const instructions = conversation?.data?.threaded_conversation_with_injections_v2?.instructions;
     if (!Array.isArray(instructions)) {
       console.log(JSON.stringify(conversation, null, 2));
@@ -229,12 +263,15 @@ export const statusAPI = async (
     writeDataPoint(event, language, wasMediaBlockedNSFW, 'API_FAIL', flags);
     return { code: 500, message: 'API_FAIL' };
   }
+  */
   // If the tweet is not a graphQL tweet it's a tombstone, return the error to the user
+  /*
   if (!isGraphQLTweet(tweet)) {
     console.log('Tweet was not a valid tweet', tweet);
     writeDataPoint(event, language, wasMediaBlockedNSFW, 'PRIVATE_TWEET', flags);
     return { code: 401, message: 'PRIVATE_TWEET' };
   }
+  */
   
   /*
   if (tweet.retweeted_status_id_str) {
@@ -255,7 +292,8 @@ export const statusAPI = async (
   )) as APITweet;
 
   /* We found a quote tweet, let's process that too */
-  const quoteTweet = tweet.quoted_status_result;
+  /*
+  const quoteTweet = tweet.parent;
   if (quoteTweet) {
     apiTweet.quote = (await populateTweetProperties(
       quoteTweet,
@@ -263,6 +301,7 @@ export const statusAPI = async (
       language
     )) as APITweet;
   }
+  */
 
   /* Finally, staple the Tweet to the response and return it */
   response.tweet = apiTweet;

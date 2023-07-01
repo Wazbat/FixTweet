@@ -38,10 +38,11 @@ export const Constants = {
     'ext=mediaStats%2ChighlightedLabel'
   ].join('&'),
   BASE_HEADERS: {
+    'authority': 'twitter.com',
     'DNT': `1`,
     'x-twitter-client-language': `en`,
     'sec-ch-ua-mobile': `?0`,
-    'content-type': `application/x-www-form-urlencoded`,
+    'content-type': `application/json`,
     'x-twitter-active-user': `yes`,
     'sec-ch-ua-platform': `"Windows"`,
     'Accept': `*/*`,

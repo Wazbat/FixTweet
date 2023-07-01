@@ -2,8 +2,9 @@ import { calculateTimeLeftString } from './pollTime';
 
 /* Renders card for polls and non-Twitter video embeds (i.e. YouTube) */
 export const renderCard = (
-  card: GraphQLTweet['card']
+  card: TweetCard // GraphQLTweet['card']
 ): { poll?: APIPoll; external_media?: APIExternalMedia } => {
+  /*
   // We convert the binding_values array into an object with the legacy format
   // TODO Clean this up
   const binding_values: Record<string, { string_value?: string; boolean_value?: boolean }> = {};
@@ -14,6 +15,8 @@ export const renderCard = (
       }
     });
   }
+  */
+  const binding_values = card.binding_values;
       
 
   console.log('rendering card');
